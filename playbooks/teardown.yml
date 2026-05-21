@@ -1,0 +1,45 @@
+---
+# Удаление web-ВМ из Yandex Cloud.
+# Control-node не трогаем — её удаляем вручную после сдачи работы.
+#
+# Запуск:
+#   ansible-playbook playbooks/teardown.yml
+
+- name: "Teardown web VMs in Yandex Cloud"
+  hosts: localhost
+  gather_facts: false
+  vars_files:
+    - ../group_vars/all.yml
+
+  tasks:
+    - name: "Получить актуальный список ВМ"
+      ansible.builtin.command:
+        cmd: yc compute instance list --format json
+      register: list_raw
+      changed_when: false
+
+    - name: "Выбрать имена web-ВМ для удаления"
+      ansible.builtin.set_fact:
+        targets: >-
+          {{
+            (list_raw.stdout | from_json)
+            | selectattr('labels.lab', 'defined')
+            | selectattr('labels.lab', 'equalto', 'lab5')
+            | selectattr('labels.role', 'equalto', 'web')
+            | map(attribute='name')
+            | list
+          }}
+
+    - name: "Показать что будет удалено"
+      ansible.builtin.debug:
+        msg: "Будут удалены ВМ: {{ targets | join(', ') if targets else '(ничего не найдено)' }}"
+
+    - name: "Удалить ВМ"
+      ansible.builtin.command:
+        cmd: "yc compute instance delete --name {{ item }}"
+      loop: "{{ targets }}"
+      register: deletion
+      changed_when: deletion.rc == 0
+      failed_when:
+        - deletion.rc != 0
+        - "'NotFound' not in deletion.stderr"

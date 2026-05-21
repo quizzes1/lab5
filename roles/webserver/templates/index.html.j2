@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <title>Lab 5 — {{ ansible_hostname }}</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 640px; margin: 4rem auto; padding: 0 1rem; }
+    code { background: #f4f4f4; padding: 0.2rem 0.4rem; border-radius: 4px; }
+    table { border-collapse: collapse; width: 100%; margin-top: 1rem; }
+    th, td { border: 1px solid #ddd; padding: 0.5rem 0.75rem; text-align: left; }
+    th { background: #fafafa; }
+  </style>
+</head>
+<body>
+  <h1>Лабораторная работа №5</h1>
+  <p>Эта страница развёрнута Ansible на ВМ <code>{{ ansible_hostname }}</code> в Yandex Cloud.</p>
+  <table>
+    <tr><th>Hostname</th><td>{{ ansible_hostname }}</td></tr>
+    <tr><th>FQDN</th><td>{{ ansible_fqdn }}</td></tr>
+    <tr><th>Внутренний IPv4</th><td>{{ ansible_default_ipv4.address }}</td></tr>
+    <tr><th>ОС</th><td>{{ ansible_distribution }} {{ ansible_distribution_version }}</td></tr>
+    <tr><th>Ядро</th><td>{{ ansible_kernel }}</td></tr>
+    <tr><th>Архитектура</th><td>{{ ansible_architecture }}</td></tr>
+    <tr><th>CPU</th><td>{{ ansible_processor_vcpus }} vCPU</td></tr>
+    <tr><th>RAM, МБ</th><td>{{ ansible_memtotal_mb }}</td></tr>
+    <tr><th>Развёрнуто</th><td>{{ ansible_date_time.iso8601 }}</td></tr>
+  </table>
+</body>
+</html>

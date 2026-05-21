@@ -1,0 +1,21 @@
+---
+# Настройка web-ВМ: установка nginx и публикация простой страницы.
+# Применяется к группе role_web из динамического инвентаря Yandex Cloud.
+#
+# Запуск:
+#   ansible-playbook playbooks/configure.yml
+
+- name: "Configure web servers (nginx)"
+  hosts: role_web
+  gather_facts: true
+  become: true
+  vars_files:
+    - ../group_vars/all.yml
+
+  pre_tasks:
+    - name: "Подождать SSH (на случай, если ВМ только что создана)"
+      ansible.builtin.wait_for_connection:
+        timeout: 120
+
+  roles:
+    - role: webserver

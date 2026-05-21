@@ -1,0 +1,92 @@
+---
+# Создание ВМ web-1 и web-2 в Yandex Cloud через yc CLI.
+# Используем модуль ansible.builtin.command как наиболее надёжный fallback —
+# официальная коллекция yandex.cloud частично заброшена и не покрывает
+# все опции compute_instance create на актуальной версии Ansible.
+#
+# Запуск:
+#   ansible-playbook playbooks/provision.yml
+
+- name: "Provision web VMs in Yandex Cloud"
+  hosts: localhost
+  gather_facts: false
+  vars_files:
+    - ../group_vars/all.yml
+
+  tasks:
+    - name: "Получить список уже существующих ВМ"
+      ansible.builtin.command:
+        cmd: yc compute instance list --format json
+      register: existing_raw
+      changed_when: false
+
+    - name: "Распарсить существующие ВМ"
+      ansible.builtin.set_fact:
+        existing_names: "{{ (existing_raw.stdout | from_json) | map(attribute='name') | list }}"
+
+    - name: "Создать ВМ ({{ item.name }})"
+      ansible.builtin.command:
+        cmd: >
+          yc compute instance create
+          --name {{ item.name }}
+          --hostname {{ item.name }}
+          --zone {{ yc.zone }}
+          --platform-id {{ vm_defaults.platform_id }}
+          --cores {{ vm_defaults.cores }}
+          --memory {{ vm_defaults.memory_gb }}
+          --create-boot-disk image-folder-id={{ image.folder_id }},image-family={{ image.family }},size={{ vm_defaults.disk_size_gb }}
+          --network-interface subnet-id={{ yc.subnet_id }},nat-ip-version=ipv4
+          --ssh-key {{ lookup('env', 'HOME') }}/.ssh/lab5_key.pub
+          --labels {{ item.labels | dict2items | map(attribute='key') | zip(item.labels | dict2items | map(attribute='value')) | map('join', '=') | join(',') }}
+          --format json
+      loop: "{{ web_hosts }}"
+      loop_control:
+        label: "{{ item.name }}"
+      when: item.name not in existing_names
+      register: created_vms
+
+    - name: "Получить итоговый список ВМ"
+      ansible.builtin.command:
+        cmd: yc compute instance list --format json
+      register: final_raw
+      changed_when: false
+
+    - name: "Сохранить IP-адреса"
+      ansible.builtin.set_fact:
+        web_inventory: >-
+          {{
+            (final_raw.stdout | from_json)
+            | selectattr('labels.role', 'defined')
+            | selectattr('labels.role', 'equalto', 'web')
+            | list
+          }}
+
+    - name: "Подождать готовности SSH на каждой web-ВМ"
+      ansible.builtin.wait_for:
+        host: "{{ item.network_interfaces[0].primary_v4_address.one_to_one_nat.address }}"
+        port: 22
+        delay: 5
+        timeout: 300
+        state: started
+      loop: "{{ web_inventory }}"
+      loop_control:
+        label: "{{ item.name }}"
+
+    - name: "Добавить web-ВМ в in-memory inventory (для следующего play)"
+      ansible.builtin.add_host:
+        name: "{{ item.name }}"
+        ansible_host: "{{ item.network_interfaces[0].primary_v4_address.one_to_one_nat.address }}"
+        ansible_user: "{{ vm_defaults.ssh_user }}"
+        groups:
+          - role_web
+      loop: "{{ web_inventory }}"
+      loop_control:
+        label: "{{ item.name }}"
+      changed_when: false
+
+    - name: "Вывести результат"
+      ansible.builtin.debug:
+        msg: "VM {{ item.name }} → {{ item.network_interfaces[0].primary_v4_address.one_to_one_nat.address }}"
+      loop: "{{ web_inventory }}"
+      loop_control:
+        label: "{{ item.name }}"

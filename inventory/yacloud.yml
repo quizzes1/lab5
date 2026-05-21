@@ -1,0 +1,35 @@
+---
+# Динамический инвентарь для Yandex Cloud.
+# Плагин из коллекции yandex.cloud (ansible-galaxy collection install yandex.cloud).
+#
+# Перед использованием:
+#   - указать folder_id (yc config get folder-id);
+#   - положить SA-ключ в ~/.yc/key.json (см. plan.md, этап 0).
+#
+# Проверка работы:
+#   ansible-inventory -i inventory/yacloud.yml --graph
+#   ansible-inventory -i inventory/yacloud.yml --list
+
+plugin: yandex.cloud.yc
+service_account_key_file: ~/.yc/key.json
+folder_id: REPLACE_WITH_FOLDER_ID
+
+# Брать имя хоста из поля name инстанса.
+hostnames:
+  - name
+
+# Группировать по меткам: ВМ с label role=web попадут в группу role_web.
+keyed_groups:
+  - key: labels.role
+    prefix: role
+  - key: labels.lab
+    prefix: lab
+
+# Брать только запущенные машины.
+filters:
+  - status == "RUNNING"
+
+# Подставить публичный IP как ansible_host (если есть NAT).
+compose:
+  ansible_host: network_interfaces[0].primary_v4_address.one_to_one_nat.address
+  ansible_user: "'ubuntu'"

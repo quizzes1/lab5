@@ -1,0 +1,24 @@
+---
+# Роль webserver: nginx + простая стартовая страница.
+
+- name: "Установить nginx"
+  ansible.builtin.apt:
+    name: nginx
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: "Развернуть стартовую страницу"
+  ansible.builtin.template:
+    src: index.html.j2
+    dest: /var/www/html/index.nginx-debian.html
+    owner: root
+    group: root
+    mode: "0644"
+  notify: "Restart nginx"
+
+- name: "Включить и запустить nginx"
+  ansible.builtin.service:
+    name: nginx
+    state: started
+    enabled: true

@@ -1,0 +1,47 @@
+id: fhm2kljbkfg9p32cb00o
+folder_id: b1gbgmkldg87tdf94t21
+created_at: "2026-05-21T10:59:09Z"
+name: control-node
+labels:
+  lab: lab5
+  role: control
+zone_id: ru-central1-a
+platform_id: standard-v3
+resources:
+  memory: "2147483648"
+  cores: "2"
+  core_fraction: "100"
+status: RUNNING
+metadata_options:
+  gce_http_endpoint: ENABLED
+  aws_v1_http_endpoint: ENABLED
+  gce_http_token: ENABLED
+  aws_v1_http_token: DISABLED
+  aws_v2_http_endpoint: ENABLED
+  aws_v2_http_token: ENABLED
+boot_disk:
+  mode: READ_WRITE
+  device_name: fhm7o27dtro3sivv111t
+  auto_delete: true
+  disk_id: fhm7o27dtro3sivv111t
+network_interfaces:
+  - index: "0"
+    mac_address: d0:0d:2a:56:6b:a3
+    subnet_id: e9b4ks8bha6579kim1a9
+    primary_v4_address:
+      address: 10.128.0.20
+      one_to_one_nat:
+        address: 84.201.132.241
+        ip_version: IPV4
+serial_port_settings:
+  ssh_authorization: OS_LOGIN
+gpu_settings: {}
+fqdn: control-node.ru-central1.internal
+scheduling_policy: {}
+network_settings:
+  type: STANDARD
+placement_policy: {}
+hardware_generation:
+  legacy_features:
+    pci_topology: PCI_TOPOLOGY_V2
+application: {}
