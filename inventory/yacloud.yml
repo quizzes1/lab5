@@ -32,4 +32,4 @@ filters:
 # Подставить публичный IP как ansible_host (если есть NAT).
 compose:
   ansible_host: network_interfaces[0].primary_v4_address.one_to_one_nat.address
-  ansible_user: "'ubuntu'"
+  ansible_user: "'yc-user'"

@@ -16,7 +16,7 @@ vm_defaults:
   cores: 2
   memory_gb: 2
   disk_size_gb: 20
-  ssh_user: "ubuntu"
+  ssh_user: "yc-user"
 
 # Публичный SSH-ключ для доступа к создаваемым ВМ.
 # Лучше переопределить через --extra-vars или vault.

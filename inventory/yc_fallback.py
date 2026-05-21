@@ -32,7 +32,7 @@ def build_inventory(instances: list[dict]) -> dict:
         if not ip:
             continue
 
-        inv["_meta"]["hostvars"][name] = {"ansible_host": ip, "ansible_user": "ubuntu"}
+        inv["_meta"]["hostvars"][name] = {"ansible_host": ip, "ansible_user": "yc-user"}
         for label_key, label_val in (inst.get("labels") or {}).items():
             group = f"{label_key}_{label_val}"
             inv.setdefault(group, {"hosts": []})["hosts"].append(name)
