@@ -24,21 +24,39 @@
       ansible.builtin.set_fact:
         existing_names: "{{ (existing_raw.stdout | from_json) | map(attribute='name') | list }}"
 
+    - name: "Прочитать публичный SSH-ключ"
+      ansible.builtin.set_fact:
+        ssh_pub_key_content: "{{ lookup('file', lookup('env', 'HOME') + '/.ssh/lab5_key.pub') }}"
+
     - name: "Создать ВМ ({{ item.name }})"
       ansible.builtin.command:
-        cmd: >
-          yc compute instance create
-          --name {{ item.name }}
-          --hostname {{ item.name }}
-          --zone {{ yc.zone }}
-          --platform-id {{ vm_defaults.platform_id }}
-          --cores {{ vm_defaults.cores }}
-          --memory {{ vm_defaults.memory_gb }}
-          --create-boot-disk image-folder-id={{ image.folder_id }},image-family={{ image.family }},size={{ vm_defaults.disk_size_gb }}
-          --network-interface subnet-id={{ yc.subnet_id }},nat-ip-version=ipv4
-          --ssh-key {{ lookup('env', 'HOME') }}/.ssh/lab5_key.pub
-          --labels {{ item.labels | dict2items | map(attribute='key') | zip(item.labels | dict2items | map(attribute='value')) | map('join', '=') | join(',') }}
-          --format json
+        argv:
+          - yc
+          - compute
+          - instance
+          - create
+          - --name
+          - "{{ item.name }}"
+          - --hostname
+          - "{{ item.name }}"
+          - --zone
+          - "{{ yc.zone }}"
+          - --platform-id
+          - "{{ vm_defaults.platform_id }}"
+          - --cores
+          - "{{ vm_defaults.cores }}"
+          - --memory
+          - "{{ vm_defaults.memory_gb }}"
+          - --create-boot-disk
+          - "image-folder-id={{ image.folder_id }},image-family={{ image.family }},size={{ vm_defaults.disk_size_gb }}"
+          - --network-interface
+          - "subnet-id={{ yc.subnet_id }},nat-ip-version=ipv4"
+          - --metadata
+          - "ssh-keys={{ vm_defaults.ssh_user }}:{{ ssh_pub_key_content }}"
+          - --labels
+          - "{{ item.labels | dict2items | map(attribute='key') | zip(item.labels | dict2items | map(attribute='value')) | map('join', '=') | join(',') }}"
+          - --format
+          - json
       loop: "{{ web_hosts }}"
       loop_control:
         label: "{{ item.name }}"
