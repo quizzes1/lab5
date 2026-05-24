@@ -51,8 +51,6 @@
           - "image-folder-id={{ image.folder_id }},image-family={{ image.family }},size={{ vm_defaults.disk_size_gb }}"
           - --network-interface
           - "subnet-id={{ yc.subnet_id }},nat-ip-version=ipv4"
-          - --metadata
-          - "ssh-keys={{ vm_defaults.ssh_user }}:{{ ssh_pub_key_content }}"
           - --labels
           - "{{ item.labels | dict2items | map(attribute='key') | zip(item.labels | dict2items | map(attribute='value')) | map('join', '=') | join(',') }}"
           - --format
@@ -62,6 +60,22 @@
         label: "{{ item.name }}"
       when: item.name not in existing_names
       register: created_vms
+
+    - name: "Прикрепить SSH-ключ через add-metadata"
+      ansible.builtin.command:
+        argv:
+          - yc
+          - compute
+          - instance
+          - add-metadata
+          - "--name"
+          - "{{ item.name }}"
+          - "--metadata"
+          - "ssh-keys={{ vm_defaults.ssh_user }}:{{ ssh_pub_key_content }}"
+      loop: "{{ web_hosts }}"
+      loop_control:
+        label: "{{ item.name }}"
+      when: item.name not in existing_names
 
     - name: "Получить итоговый список ВМ"
       ansible.builtin.command:
@@ -79,7 +93,7 @@
             | list
           }}
 
-    - name: "Подождать готовности SSH на каждой web-ВМ"
+    - name: "Подождать готовности SSH на каждой web-ВМ (порт открыт)"
       ansible.builtin.wait_for:
         host: "{{ item.network_interfaces[0].primary_v4_address.one_to_one_nat.address }}"
         port: 22
@@ -89,6 +103,10 @@
       loop: "{{ web_inventory }}"
       loop_control:
         label: "{{ item.name }}"
+
+    - name: "Дать guest-агенту время прокинуть SSH-ключ в authorized_keys"
+      ansible.builtin.pause:
+        seconds: 30
 
     - name: "Добавить web-ВМ в in-memory inventory (для следующего play)"
       ansible.builtin.add_host:
