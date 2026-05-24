@@ -1,0 +1,553 @@
+\documentclass[12pt,a4paper]{article}
+
+\usepackage[T2A]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[russian]{babel}
+\usepackage{geometry}
+\geometry{a4paper, margin=2.5cm}
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    urlcolor=blue,
+    citecolor=blue,
+}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{titlesec}
+\usepackage{setspace}
+
+\lstset{
+    basicstyle=\ttfamily\small,
+    breaklines=true,
+    breakatwhitespace=false,
+    columns=fullflexible,
+    frame=single,
+    framesep=4pt,
+    framerule=0.4pt,
+    rulecolor=\color{gray!50},
+    backgroundcolor=\color{gray!5},
+    showstringspaces=false,
+    keepspaces=true,
+    extendedchars=true,
+    inputencoding=utf8,
+    literate=
+        {а}{{\selectfont\char224}}1 {б}{{\selectfont\char225}}1
+        {в}{{\selectfont\char226}}1 {г}{{\selectfont\char227}}1
+        {д}{{\selectfont\char228}}1 {е}{{\selectfont\char229}}1
+        {ё}{{\selectfont\char184}}1 {ж}{{\selectfont\char230}}1
+        {з}{{\selectfont\char231}}1 {и}{{\selectfont\char232}}1
+        {й}{{\selectfont\char233}}1 {к}{{\selectfont\char234}}1
+        {л}{{\selectfont\char235}}1 {м}{{\selectfont\char236}}1
+        {н}{{\selectfont\char237}}1 {о}{{\selectfont\char238}}1
+        {п}{{\selectfont\char239}}1 {р}{{\selectfont\char240}}1
+        {с}{{\selectfont\char241}}1 {т}{{\selectfont\char242}}1
+        {у}{{\selectfont\char243}}1 {ф}{{\selectfont\char244}}1
+        {х}{{\selectfont\char245}}1 {ц}{{\selectfont\char246}}1
+        {ч}{{\selectfont\char247}}1 {ш}{{\selectfont\char248}}1
+        {щ}{{\selectfont\char249}}1 {ъ}{{\selectfont\char250}}1
+        {ы}{{\selectfont\char251}}1 {ь}{{\selectfont\char252}}1
+        {э}{{\selectfont\char253}}1 {ю}{{\selectfont\char254}}1
+        {я}{{\selectfont\char255}}1
+        {А}{{\selectfont\char192}}1 {Б}{{\selectfont\char193}}1
+        {В}{{\selectfont\char194}}1 {Г}{{\selectfont\char195}}1
+        {Д}{{\selectfont\char196}}1 {Е}{{\selectfont\char197}}1
+        {Ё}{{\selectfont\char168}}1 {Ж}{{\selectfont\char198}}1
+        {З}{{\selectfont\char199}}1 {И}{{\selectfont\char200}}1
+        {Й}{{\selectfont\char201}}1 {К}{{\selectfont\char202}}1
+        {Л}{{\selectfont\char203}}1 {М}{{\selectfont\char204}}1
+        {Н}{{\selectfont\char205}}1 {О}{{\selectfont\char206}}1
+        {П}{{\selectfont\char207}}1 {Р}{{\selectfont\char208}}1
+        {С}{{\selectfont\char209}}1 {Т}{{\selectfont\char210}}1
+        {У}{{\selectfont\char211}}1 {Ф}{{\selectfont\char212}}1
+        {Х}{{\selectfont\char213}}1 {Ц}{{\selectfont\char214}}1
+        {Ч}{{\selectfont\char215}}1 {Ш}{{\selectfont\char216}}1
+        {Щ}{{\selectfont\char217}}1 {Ъ}{{\selectfont\char218}}1
+        {Ы}{{\selectfont\char219}}1 {Ь}{{\selectfont\char220}}1
+        {Э}{{\selectfont\char221}}1 {Ю}{{\selectfont\char222}}1
+        {Я}{{\selectfont\char223}}1
+}
+
+\begin{document}
+
+% ============================================================
+% Титульный лист
+% ============================================================
+\begin{titlepage}
+    \centering
+    {\normalsize Санкт-Петербургский политехнический университет Петра Великого\par}
+    {\normalsize Институт компьютерных наук и кибербезопасности\par}
+    {\normalsize Высшая школа программной инженерии\par}
+
+    \vspace{4cm}
+
+    {\Huge\bfseries Практическое задание №5\par}
+
+    \vspace{0.5cm}
+    {\large по дисциплине <<Системы программирования>>\par}
+
+    \vfill
+
+    \begin{flushleft}
+        \noindent Выполнил:\hfill Подшивалов Г. А.\\[0.3em]
+        \noindent Группа:\hfill гр. 5130904/50501\\[0.3em]
+        \noindent Проверила:\hfill Степина Н. О.
+    \end{flushleft}
+
+    \vfill
+
+    {\normalsize Санкт-Петербург\par}
+    {\normalsize 2026\par}
+\end{titlepage}
+
+% ============================================================
+% Содержание
+% ============================================================
+\tableofcontents
+\newpage
+
+% ============================================================
+% 1. Постановка задачи
+% ============================================================
+\section{Постановка задачи}
+
+Цель данного задания — продемонстрировать использование Ansible для решения задачи удалённого развертывания среды эксплуатации ИТ-системы. В качестве облачной платформы выбран Yandex Cloud. Необходимо реализовать четыре сценария интеграции:
+
+\begin{itemize}
+    \item provisioning виртуальных машин через плейбук Ansible;
+    \item динамический инвентарь (Ansible автоматически находит созданные ВМ в облаке);
+    \item configuration management (установка и настройка nginx);
+    \item teardown — корректное удаление созданных ресурсов.
+\end{itemize}
+
+% ============================================================
+% 2. Ход работы
+% ============================================================
+\section{Ход работы}
+
+\subsection{Подготовка инфраструктуры}
+
+\subsubsection{Установка Yandex Cloud CLI}
+
+Выполнена установка Yandex Cloud CLI на локальной Windows-машине:
+
+\begin{lstlisting}
+iex (New-Object System.Net.WebClient).DownloadString(
+    'https://storage.yandexcloud.net/yandexcloud-yc/install.ps1')
+\end{lstlisting}
+
+\begin{lstlisting}
+yc --version
+Yandex Cloud CLI 0.150.0 windows/amd64
+\end{lstlisting}
+
+\subsubsection{Инициализация CLI и создание сервисного аккаунта}
+
+Выполнена настройка профиля, создание каталога и сервисного аккаунта для Ansible:
+
+\begin{lstlisting}
+yc init
+yc iam service-account create --name ansible-sa
+yc resource-manager folder add-access-binding lab5-folder `
+    --role editor `
+    --subject serviceAccount:<SA_ID>
+yc iam key create --service-account-name ansible-sa `
+    --output $HOME\.yc\key.json
+\end{lstlisting}
+
+\subsubsection{Создание SSH-ключей}
+
+\begin{lstlisting}
+ssh-keygen -t ed25519 -f $HOME\.ssh\lab5_key -N '""'
+\end{lstlisting}
+
+\subsubsection{Создание управляющей ВМ (control-node)}
+
+\begin{lstlisting}
+yc compute instance create `
+    --name control-node `
+    --zone ru-central1-a `
+    --platform-id standard-v3 `
+    --cores 2 --memory 2 `
+    --create-boot-disk image-folder-id=standard-images,image-family=ubuntu-2204-lts,size=20 `
+    --network-interface subnet-name=default-ru-central1-a,nat-ip-version=ipv4 `
+    --ssh-key $HOME\.ssh\lab5_key.pub `
+    --labels role=control,lab=lab5
+\end{lstlisting}
+
+\begin{lstlisting}
+id: fhmc34s7ns0h6stgnb6m
+name: control-node
+status: RUNNING
+...
+primary_v4_address:
+    address: 192.168.1.13
+    one_to_one_nat:
+        address: 84.201.132.241
+\end{lstlisting}
+
+\subsubsection{Подключение к ВМ}
+
+\begin{lstlisting}
+ssh -i ~/.ssh/lab5_key yc-user@84.201.132.241
+\end{lstlisting}
+
+\begin{lstlisting}
+Welcome to Ubuntu 22.04.5 LTS (GNU/Linux 5.15.0-176-generic x86_64)
+yc-user@control-node:~$
+\end{lstlisting}
+
+\subsection{Установка Ansible и зависимостей}
+
+\subsubsection{Обновление системы и установка пакетов}
+
+\begin{lstlisting}
+sudo apt update && sudo apt upgrade -y
+sudo apt install -y python3 python3-pip git
+\end{lstlisting}
+
+\subsubsection{Установка Python-библиотек}
+
+\begin{lstlisting}
+pip3 install --user ansible yandexcloud
+echo 'export PATH=$HOME/.local/bin:$PATH' >> ~/.bashrc
+source ~/.bashrc
+\end{lstlisting}
+
+\begin{lstlisting}
+ansible --version
+ansible [core 2.17.0]
+\end{lstlisting}
+
+\subsubsection{Установка yc CLI на control-node}
+
+\begin{lstlisting}
+curl -sSL https://storage.yandexcloud.net/yandexcloud-yc/install.sh | bash
+source ~/.bashrc
+yc config profile create sa-profile
+yc config set service-account-key ~/.yc/key.json
+yc config set cloud-id <CLOUD_ID>
+yc config set folder-id <FOLDER_ID>
+yc config set compute-default-zone ru-central1-a
+\end{lstlisting}
+
+\subsection{Динамический инвентарь}
+
+\subsubsection{Создание скрипта инвентаря}
+
+Создан скрипт \texttt{inventory/yc\_fallback.py}, который вызывает \texttt{yc compute instance list --format json}, фильтрует запущенные ВМ и группирует их по меткам (\texttt{labels}). Группировка: ВМ с меткой \texttt{role=web} попадают в группу \texttt{role\_web}.
+
+\begin{lstlisting}
+chmod +x ~/lab5/inventory/yc_fallback.py
+~/lab5/inventory/yc_fallback.py | python3 -m json.tool
+\end{lstlisting}
+
+\begin{lstlisting}
+{
+    "_meta": {
+        "hostvars": {
+            "control-node": {
+                "ansible_host": "84.201.132.241",
+                "ansible_user": "yc-user"
+            }
+        }
+    },
+    "role_control": {"hosts": ["control-node"]},
+    "lab_lab5":    {"hosts": ["control-node"]}
+}
+\end{lstlisting}
+
+\subsubsection{Конфигурация Ansible}
+
+Скрипт прописан как инвентарь по умолчанию в \texttt{ansible.cfg}:
+
+\begin{lstlisting}
+[defaults]
+inventory            = ./inventory/yc_fallback.py
+roles_path           = ./roles
+host_key_checking    = False
+remote_user          = yc-user
+private_key_file     = ~/.ssh/lab5_key
+stdout_callback      = yaml
+\end{lstlisting}
+
+\subsubsection{Тестирование динамического инвентаря}
+
+\begin{lstlisting}
+ansible-inventory --graph
+@all:
+  |--@ungrouped:
+  |--@role_control:
+  |  |--control-node
+  |--@lab_lab5:
+  |  |--control-node
+\end{lstlisting}
+
+\subsection{Создание ВМ через Ansible Playbook}
+
+\subsubsection{Playbook provision.yml}
+
+Создан плейбук, который через \texttt{yc} CLI разворачивает две ВМ \texttt{web-1} и \texttt{web-2} с метками \texttt{role=web, lab=lab5}, дожидается готовности SSH и регистрирует их в in-memory инвентаре.
+
+Ключевые задачи:
+
+\begin{lstlisting}
+- name: "Создать ВМ ({{ item.name }})"
+  ansible.builtin.command:
+    cmd: >
+      yc compute instance create
+      --name {{ item.name }}
+      --zone {{ yc.zone }}
+      --platform-id {{ vm_defaults.platform_id }}
+      --cores {{ vm_defaults.cores }}
+      --memory {{ vm_defaults.memory_gb }}
+      --create-boot-disk image-folder-id={{ image.folder_id }},image-family={{ image.family }},size={{ vm_defaults.disk_size_gb }}
+      --network-interface subnet-id={{ yc.subnet_id }},nat-ip-version=ipv4
+      --ssh-key {{ lookup('env', 'HOME') }}/.ssh/lab5_key.pub
+      --labels role=web,lab=lab5
+      --format json
+  loop: "{{ web_hosts }}"
+  when: item.name not in existing_names
+
+- name: "Подождать готовности SSH"
+  ansible.builtin.wait_for:
+    host: "{{ item.network_interfaces[0].primary_v4_address.one_to_one_nat.address }}"
+    port: 22
+    delay: 5
+    timeout: 300
+  loop: "{{ web_inventory }}"
+\end{lstlisting}
+
+\subsubsection{Запуск playbook}
+
+\begin{lstlisting}
+ansible-playbook playbooks/provision.yml
+\end{lstlisting}
+
+\begin{lstlisting}
+PLAY [Provision web VMs in Yandex Cloud] ***********************
+
+TASK [Получить список уже существующих ВМ] *********************
+ok: [localhost]
+
+TASK [Создать ВМ (web-1)] **************************************
+changed: [localhost] => (item=web-1)
+
+TASK [Создать ВМ (web-2)] **************************************
+changed: [localhost] => (item=web-2)
+
+TASK [Подождать готовности SSH на каждой web-ВМ] ***************
+ok: [localhost] => (item=web-1)
+ok: [localhost] => (item=web-2)
+
+TASK [Вывести результат] ***************************************
+ok: [localhost] => msg: "VM web-1 -> 89.169.151.155"
+ok: [localhost] => msg: "VM web-2 -> 93.77.191.135"
+
+PLAY RECAP ******************************************************
+localhost : ok=7 changed=2 unreachable=0 failed=0
+\end{lstlisting}
+
+\subsection{Настройка nginx на ВМ}
+
+\subsubsection{Роль webserver}
+
+Создана Ansible-роль \texttt{webserver}, устанавливающая nginx и публикующая шаблонную страницу со сведениями о хосте (\texttt{ansible\_hostname}, IP, ОС, ядро, CPU, RAM).
+
+\begin{lstlisting}
+# roles/webserver/tasks/main.yml
+- name: "Установить nginx"
+  ansible.builtin.apt:
+    name: nginx
+    state: present
+    update_cache: true
+
+- name: "Развернуть стартовую страницу"
+  ansible.builtin.template:
+    src: index.html.j2
+    dest: /var/www/html/index.nginx-debian.html
+    owner: root
+    group: root
+    mode: "0644"
+  notify: "Restart nginx"
+
+- name: "Включить и запустить nginx"
+  ansible.builtin.service:
+    name: nginx
+    state: started
+    enabled: true
+\end{lstlisting}
+
+\subsubsection{Playbook configure.yml}
+
+\begin{lstlisting}
+- name: "Configure web servers (nginx)"
+  hosts: role_web
+  become: true
+  pre_tasks:
+    - name: "Подождать SSH"
+      ansible.builtin.wait_for_connection:
+        timeout: 120
+  roles:
+    - role: webserver
+\end{lstlisting}
+
+\subsubsection{Запуск playbook}
+
+\begin{lstlisting}
+ansible-playbook playbooks/configure.yml
+\end{lstlisting}
+
+\begin{lstlisting}
+PLAY [Configure web servers (nginx)] ***************************
+
+TASK [Gathering Facts] *****************************************
+ok: [web-1]
+ok: [web-2]
+
+TASK [webserver : Установить nginx] ****************************
+changed: [web-1]
+changed: [web-2]
+
+TASK [webserver : Развернуть стартовую страницу] ***************
+changed: [web-1]
+changed: [web-2]
+
+TASK [webserver : Включить и запустить nginx] ******************
+ok: [web-1]
+ok: [web-2]
+
+RUNNING HANDLER [webserver : Restart nginx] ********************
+changed: [web-1]
+changed: [web-2]
+
+PLAY RECAP *****************************************************
+web-1 : ok=6 changed=3 unreachable=0 failed=0
+web-2 : ok=6 changed=3 unreachable=0 failed=0
+\end{lstlisting}
+
+\subsubsection{Проверка работы веб-сервера}
+
+\begin{lstlisting}
+curl http://89.169.151.155
+\end{lstlisting}
+
+\begin{lstlisting}
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <title>Lab 5 — web-1</title>
+</head>
+<body>
+    <h1>Лабораторная работа №5</h1>
+    <p>Эта страница развёрнута Ansible на ВМ <code>web-1</code>
+       в Yandex Cloud.</p>
+    <table>
+        <tr><th>Hostname</th><td>web-1</td></tr>
+        <tr><th>Внутренний IPv4</th><td>192.168.1.21</td></tr>
+        <tr><th>ОС</th><td>Ubuntu 22.04</td></tr>
+        <tr><th>Ядро</th><td>5.15.0-176-generic</td></tr>
+        <tr><th>CPU</th><td>2 vCPU</td></tr>
+        <tr><th>RAM, МБ</th><td>1990</td></tr>
+    </table>
+</body>
+</html>
+\end{lstlisting}
+
+\subsubsection{Проверка идемпотентности}
+
+Повторный запуск \texttt{configure.yml} не должен вносить изменений:
+
+\begin{lstlisting}
+ansible-playbook playbooks/configure.yml
+
+PLAY RECAP *****************************************************
+web-1 : ok=6 changed=0 unreachable=0 failed=0
+web-2 : ok=6 changed=0 unreachable=0 failed=0
+\end{lstlisting}
+
+\subsection{Удаление ВМ через Ansible}
+
+\subsubsection{Playbook teardown.yml}
+
+Плейбук удаляет ВМ с метками \texttt{lab=lab5} и \texttt{role=web}, control-node при этом не затрагивается:
+
+\begin{lstlisting}
+- name: "Teardown web VMs in Yandex Cloud"
+  hosts: localhost
+  tasks:
+    - name: "Получить актуальный список ВМ"
+      ansible.builtin.command:
+        cmd: yc compute instance list --format json
+      register: list_raw
+
+    - name: "Выбрать имена web-ВМ для удаления"
+      ansible.builtin.set_fact:
+        targets: >-
+          {{ (list_raw.stdout | from_json)
+             | selectattr('labels.lab', 'equalto', 'lab5')
+             | selectattr('labels.role', 'equalto', 'web')
+             | map(attribute='name') | list }}
+
+    - name: "Удалить ВМ"
+      ansible.builtin.command:
+        cmd: "yc compute instance delete --name {{ item }}"
+      loop: "{{ targets }}"
+\end{lstlisting}
+
+\subsubsection{Запуск playbook}
+
+\begin{lstlisting}
+ansible-playbook playbooks/teardown.yml
+\end{lstlisting}
+
+\begin{lstlisting}
+PLAY [Teardown web VMs in Yandex Cloud] ************************
+
+TASK [Получить актуальный список ВМ] ***************************
+ok: [localhost]
+
+TASK [Показать что будет удалено] ******************************
+ok: [localhost] => msg: "Будут удалены ВМ: web-1, web-2"
+
+TASK [Удалить ВМ] **********************************************
+changed: [localhost] => (item=web-1)
+changed: [localhost] => (item=web-2)
+
+PLAY RECAP *****************************************************
+localhost : ok=4 changed=2 unreachable=0 failed=0
+\end{lstlisting}
+
+После выполнения в каталоге остаётся только \texttt{control-node}:
+
+\begin{lstlisting}
+yc compute instance list
++----------------------+--------------+---------------+---------+
+|          ID          |     NAME     |     ZONE      | STATUS  |
++----------------------+--------------+---------------+---------+
+| fhmc34s7ns0h6stgnb6m | control-node | ru-central1-a | RUNNING |
++----------------------+--------------+---------------+---------+
+\end{lstlisting}
+
+% ============================================================
+% 3. Вывод
+% ============================================================
+\section{Вывод}
+
+В ходе выполнения лабораторной работы были успешно освоены следующие навыки:
+
+\begin{itemize}
+    \item работа с Yandex Cloud CLI и создание облачной инфраструктуры;
+    \item установка и настройка Ansible на управляющей виртуальной машине;
+    \item создание динамического инвентаря для автоматического обнаружения ВМ через API облака;
+    \item автоматизация развёртывания виртуальных машин с помощью Ansible playbook;
+    \item установка и настройка веб-сервера nginx через роли Ansible с использованием Jinja2-шаблонов;
+    \item обеспечение идемпотентности конфигурации (повторный запуск playbook не вносит изменений);
+    \item удаление виртуальных машин средствами Ansible с фильтрацией по меткам.
+\end{itemize}
+
+Продемонстрирована применимость подхода Infrastructure as Code (IaC) для интеграции Ansible с облачной платформой Yandex Cloud. Все цели лабораторной работы достигнуты, инфраструктура протестирована и работает корректно.
+
+\end{document}
