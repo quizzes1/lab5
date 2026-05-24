@@ -3,9 +3,9 @@
 # ВАЖНО: подставить реальные folder_id и subnet_id после `yc init`.
 
 yc:
-  folder_id: "REPLACE_WITH_FOLDER_ID"   # yc config get folder-id
+  folder_id: "b1gbgmkldg87tdf94t21"
   zone: "ru-central1-a"
-  subnet_id: "REPLACE_WITH_SUBNET_ID"   # yc vpc subnet list
+  subnet_id: "e9b4ks8bha6579kim1a9"
 
 image:
   family: "ubuntu-2204-lts"
