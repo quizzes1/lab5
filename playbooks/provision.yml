@@ -27,12 +27,6 @@
       ansible.builtin.set_fact:
         ssh_pub_key_content: "{{ lookup('file', lookup('env', 'HOME') + '/.ssh/lab5_key.pub') }}"
 
-    - name: "Записать SSH-ключ в temp-файл (формат YC: user:key)"
-      ansible.builtin.copy:
-        content: "{{ vm_defaults.ssh_user }}:{{ ssh_pub_key_content }}"
-        dest: /tmp/lab5_ssh_meta.txt
-        mode: '0600'
-
     - name: "Создать ВМ ({{ item.name }})"
       ansible.builtin.command:
         argv:
@@ -58,8 +52,8 @@
           - "subnet-id={{ yc.subnet_id }}"
           - --labels
           - "{{ item.labels | dict2items | map(attribute='key') | zip(item.labels | dict2items | map(attribute='value')) | map('join', '=') | join(',') }}"
-          - --metadata-from-file
-          - "ssh-keys=/tmp/lab5_ssh_meta.txt"
+          - --ssh-key
+          - "{{ lookup('env', 'HOME') + '/.ssh/lab5_key.pub' }}"
           - --format
           - json
       loop: "{{ web_hosts }}"
