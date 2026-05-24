@@ -1,8 +1,7 @@
 ---
 # Создание ВМ web-1 и web-2 в Yandex Cloud через yc CLI.
-# Используем модуль ansible.builtin.command как наиболее надёжный fallback —
-# официальная коллекция yandex.cloud частично заброшена и не покрывает
-# все опции compute_instance create на актуальной версии Ansible.
+# SSH-ключ передаётся через --metadata-from-file при создании ВМ —
+# это гарантирует, что guest-agent прочитает его при первой загрузке.
 #
 # Запуск:
 #   ansible-playbook playbooks/provision.yml
@@ -27,6 +26,12 @@
     - name: "Прочитать публичный SSH-ключ"
       ansible.builtin.set_fact:
         ssh_pub_key_content: "{{ lookup('file', lookup('env', 'HOME') + '/.ssh/lab5_key.pub') }}"
+
+    - name: "Записать SSH-ключ в temp-файл (формат YC: user:key)"
+      ansible.builtin.copy:
+        content: "{{ vm_defaults.ssh_user }}:{{ ssh_pub_key_content }}"
+        dest: /tmp/lab5_ssh_meta.txt
+        mode: '0600'
 
     - name: "Создать ВМ ({{ item.name }})"
       ansible.builtin.command:
@@ -53,6 +58,8 @@
           - "subnet-id={{ yc.subnet_id }}"
           - --labels
           - "{{ item.labels | dict2items | map(attribute='key') | zip(item.labels | dict2items | map(attribute='value')) | map('join', '=') | join(',') }}"
+          - --metadata-from-file
+          - "ssh-keys=/tmp/lab5_ssh_meta.txt"
           - --format
           - json
       loop: "{{ web_hosts }}"
@@ -61,29 +68,13 @@
       when: item.name not in existing_names
       register: created_vms
 
-    - name: "Прикрепить SSH-ключ через add-metadata"
-      ansible.builtin.command:
-        argv:
-          - yc
-          - compute
-          - instance
-          - add-metadata
-          - "--name"
-          - "{{ item.name }}"
-          - "--metadata"
-          - "ssh-keys={{ vm_defaults.ssh_user }}:{{ ssh_pub_key_content }}"
-      loop: "{{ web_hosts }}"
-      loop_control:
-        label: "{{ item.name }}"
-      when: item.name not in existing_names
-
     - name: "Получить итоговый список ВМ"
       ansible.builtin.command:
         cmd: yc compute instance list --format json
       register: final_raw
       changed_when: false
 
-    - name: "Сохранить IP-адреса"
+    - name: "Сохранить web-ВМ"
       ansible.builtin.set_fact:
         web_inventory: >-
           {{
@@ -104,9 +95,9 @@
       loop_control:
         label: "{{ item.name }}"
 
-    - name: "Дать guest-агенту время прокинуть SSH-ключ в authorized_keys"
+    - name: "Дать cloud-init время прописать ключ в authorized_keys"
       ansible.builtin.pause:
-        seconds: 30
+        seconds: 60
 
     - name: "Добавить web-ВМ в in-memory inventory (для следующего play)"
       ansible.builtin.add_host:
