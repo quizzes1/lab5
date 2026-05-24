@@ -50,7 +50,7 @@
           - --create-boot-disk
           - "image-folder-id={{ image.folder_id }},image-family={{ image.family }},size={{ vm_defaults.disk_size_gb }}"
           - --network-interface
-          - "subnet-id={{ yc.subnet_id }},nat-ip-version=ipv4"
+          - "subnet-id={{ yc.subnet_id }}"
           - --labels
           - "{{ item.labels | dict2items | map(attribute='key') | zip(item.labels | dict2items | map(attribute='value')) | map('join', '=') | join(',') }}"
           - --format
@@ -95,7 +95,7 @@
 
     - name: "Подождать готовности SSH на каждой web-ВМ (порт открыт)"
       ansible.builtin.wait_for:
-        host: "{{ item.network_interfaces[0].primary_v4_address.one_to_one_nat.address }}"
+        host: "{{ item.network_interfaces[0].primary_v4_address.address }}"
         port: 22
         delay: 5
         timeout: 300
@@ -111,7 +111,7 @@
     - name: "Добавить web-ВМ в in-memory inventory (для следующего play)"
       ansible.builtin.add_host:
         name: "{{ item.name }}"
-        ansible_host: "{{ item.network_interfaces[0].primary_v4_address.one_to_one_nat.address }}"
+        ansible_host: "{{ item.network_interfaces[0].primary_v4_address.address }}"
         ansible_user: "{{ vm_defaults.ssh_user }}"
         groups:
           - role_web
@@ -122,7 +122,7 @@
 
     - name: "Вывести результат"
       ansible.builtin.debug:
-        msg: "VM {{ item.name }} → {{ item.network_interfaces[0].primary_v4_address.one_to_one_nat.address }}"
+        msg: "VM {{ item.name }} → {{ item.network_interfaces[0].primary_v4_address.address }}"
       loop: "{{ web_inventory }}"
       loop_control:
         label: "{{ item.name }}"

@@ -27,8 +27,11 @@ def build_inventory(instances: list[dict]) -> dict:
             continue
         name = inst["name"]
         nics = inst.get("network_interfaces") or []
-        nat = (nics[0].get("primary_v4_address", {}).get("one_to_one_nat") or {}) if nics else {}
-        ip = nat.get("address")
+        if not nics:
+            continue
+        primary = nics[0].get("primary_v4_address", {}) or {}
+        nat = primary.get("one_to_one_nat") or {}
+        ip = nat.get("address") or primary.get("address")
         if not ip:
             continue
 
